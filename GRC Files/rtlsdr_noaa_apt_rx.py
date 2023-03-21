@@ -5,8 +5,8 @@
 # SPDX-License-Identifier: GPL-3.0
 #
 # GNU Radio Python Flow Graph
-# Title: RTLSDR NOAA APT Receiver V1.0.0
-# Author: Dom Robinson
+# Title: Airspy HF+ NOAA APT Receiver
+# Author: Bert
 # Description: APT to WAV recorder for Raspberry-Noaa -V2
 # GNU Radio version: 3.10.5.1
 
@@ -21,7 +21,7 @@ import signal
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
-from gnuradio import soapy
+from gnuradio import SoapySDR
 
 
 

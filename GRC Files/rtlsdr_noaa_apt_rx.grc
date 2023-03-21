@@ -1,6 +1,6 @@
 options:
   parameters:
-    author: Dom Robinson
+    author: Bert
     catch_exceptions: 'True'
     category: Custom
     cmake_opt: ''
@@ -22,7 +22,7 @@ options:
     run_options: run
     sizing_mode: fixed
     thread_safe_setters: ''
-    title: RTLSDR NOAA APT Receiver V1.0.0
+    title: Airspy HF+ NOAA APT Receiver
     window_size: 1280, 1050
   states:
     bus_sink: false
