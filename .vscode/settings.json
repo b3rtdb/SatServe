@@ -1,0 +1,5 @@
+{
+    "git.alwaysShowStagedChangesResourceGroup": true,
+    "git.enabled": true,
+    "cmake.configureOnOpen": false
+}

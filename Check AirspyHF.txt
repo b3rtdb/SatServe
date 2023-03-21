@@ -1,0 +1,32 @@
+pi@SatServe:~ $ SoapySDRUtil --probe="driver=airspyhf"
+######################################################
+##     Soapy SDR -- the SDR abstraction library     ##
+######################################################
+
+Probe device driver=airspyhf
+
+----------------------------------------------------
+-- Device identification
+----------------------------------------------------
+  driver=AirspyHF
+  hardware=AirspyHF
+  serial=3652975d94bf3ff7
+
+----------------------------------------------------
+-- Peripheral summary
+----------------------------------------------------
+  Channels: 1 Rx, 0 Tx
+  Timestamps: NO
+
+----------------------------------------------------
+-- RX Channel 0
+----------------------------------------------------
+  Full-duplex: NO
+  Supports AGC: YES
+  Stream formats: CF32, CS16, CS8, CU16, CU8
+  Native format: CF32 [full-scale=1]
+  Antennas: RX
+  Full gain range: [0, 0] dB
+  Full freq range: [0.009, 31], [60, 260] MHz
+    RF freq range: [0.009, 31], [60, 260] MHz
+  Sample rates: 0.912, 0.768, 0.456, 0.384, 0.256, 0.192 MSps
