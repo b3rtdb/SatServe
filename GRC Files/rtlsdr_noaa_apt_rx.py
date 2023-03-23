@@ -21,7 +21,8 @@ import signal
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
-from gnuradio import soapy
+import osmosdr
+import time
 
 
 
@@ -29,7 +30,7 @@ from gnuradio import soapy
 class rtlsdr_noaa_apt_rx(gr.top_block):
 
     def __init__(self):
-        gr.top_block.__init__(self, "RTLSDR NOAA APT Receiver V1.0.0", catch_exceptions=True)
+        gr.top_block.__init__(self, "Airspy HF+ NOAA APT Receiver", catch_exceptions=True)
 
         ###############################################################
 	    # Variables - added for Raspberry-Noaa-V2 manually after export
@@ -57,20 +58,6 @@ class rtlsdr_noaa_apt_rx(gr.top_block):
         # Blocks
         ##################################################
 
-        self.soapy_airspyhf_source_0 = None
-        dev = 'driver=airspyhf'
-        stream_args = ''
-        tune_args = ['']
-        settings = ['']
-
-        self.soapy_airspyhf_source_0 = soapy.source(dev, "fc32", 1, '',
-                                  stream_args, tune_args, settings)
-        self.soapy_airspyhf_source_0.set_sample_rate(0, samp_rate)
-        self.soapy_airspyhf_source_0.set_gain_mode(0, True)
-        self.soapy_airspyhf_source_0.set_frequency(0, centre_freq)
-        self.soapy_airspyhf_source_0.set_frequency_correction(0, freq_offset)
-        self.soapy_airspyhf_source_0.set_gain(0, 'RF', min(max(0, -48.0), 0.0))
-        self.soapy_airspyhf_source_0.set_gain(0, 'LNA', 6 if True else 0)
         self.rational_resampler_xxx_1 = filter.rational_resampler_fff(
                 interpolation=1,
                 decimation=4,
@@ -81,6 +68,21 @@ class rtlsdr_noaa_apt_rx(gr.top_block):
                 decimation=192,
                 taps=[],
                 fractional_bw=0)
+        self.osmosdr_source_0 = osmosdr.source(
+            args="numchan=" + str(1) + " " + "airspy=0"
+        )
+        self.osmosdr_source_0.set_time_unknown_pps(osmosdr.time_spec_t())
+        self.osmosdr_source_0.set_sample_rate(samp_rate)
+        self.osmosdr_source_0.set_center_freq(centre_freq, 0)
+        self.osmosdr_source_0.set_freq_corr(freq_offset, 0)
+        self.osmosdr_source_0.set_dc_offset_mode(0, 0)
+        self.osmosdr_source_0.set_iq_balance_mode(0, 0)
+        self.osmosdr_source_0.set_gain_mode(True, 0)
+        self.osmosdr_source_0.set_gain(gain, 0)
+        self.osmosdr_source_0.set_if_gain(20, 0)
+        self.osmosdr_source_0.set_bb_gain(20, 0)
+        self.osmosdr_source_0.set_antenna('', 0)
+        self.osmosdr_source_0.set_bandwidth(0, 0)
         self.low_pass_filter_0 = filter.fir_filter_ccf(
             20,
             firdes.low_pass(
@@ -111,9 +113,9 @@ class rtlsdr_noaa_apt_rx(gr.top_block):
         self.connect((self.blks2_wfm_rcv_0, 0), (self.rational_resampler_xxx_0, 0))
         self.connect((self.blocks_multiply_const_vxx_0, 0), (self.gr_wavfile_sink_0_0_0_0, 0))
         self.connect((self.low_pass_filter_0, 0), (self.blks2_wfm_rcv_0, 0))
+        self.connect((self.osmosdr_source_0, 0), (self.low_pass_filter_0, 0))
         self.connect((self.rational_resampler_xxx_0, 0), (self.rational_resampler_xxx_1, 0))
         self.connect((self.rational_resampler_xxx_1, 0), (self.blocks_multiply_const_vxx_0, 0))
-        self.connect((self.soapy_airspyhf_source_0, 0), (self.low_pass_filter_0, 0))
 
 
     def get_trans(self):
@@ -129,7 +131,7 @@ class rtlsdr_noaa_apt_rx(gr.top_block):
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
         self.low_pass_filter_0.set_taps(firdes.low_pass(1, self.samp_rate, self.cutoff, self.trans, window.WIN_HAMMING, 6.76))
-        self.soapy_airspyhf_source_0.set_sample_rate(0, self.samp_rate)
+        self.osmosdr_source_0.set_sample_rate(self.samp_rate)
 
     def get_recfile(self):
         return self.recfile
@@ -143,14 +145,13 @@ class rtlsdr_noaa_apt_rx(gr.top_block):
 
     def set_gain(self, gain):
         self.gain = gain
-        self.soapy_airspyhf_source_0.set_gain(0, 'RF', min(max(self.gain, -48.0), 0.0))
 
     def get_freq_offset(self):
         return self.freq_offset
 
     def set_freq_offset(self, freq_offset):
         self.freq_offset = freq_offset
-        self.soapy_airspyhf_source_0.set_frequency_correction(0, self.freq_offset)
+        self.osmosdr_source_0.set_freq_corr(self.freq_offset, 0)
 
     def get_cutoff(self):
         return self.cutoff
@@ -164,7 +165,7 @@ class rtlsdr_noaa_apt_rx(gr.top_block):
 
     def set_centre_freq(self, centre_freq):
         self.centre_freq = centre_freq
-        self.soapy_airspyhf_source_0.set_frequency(0, self.centre_freq)
+        self.osmosdr_source_0.set_center_freq(self.centre_freq, 0)
 
 
 

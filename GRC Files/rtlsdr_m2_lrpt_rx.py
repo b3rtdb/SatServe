@@ -22,7 +22,8 @@ import signal
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
-from gnuradio import soapy
+import osmosdr
+import time
 
 
 
@@ -40,7 +41,7 @@ class rtlsdr_m2_lrpt_rx(gr.top_block):
         freq_offset = int(sys.argv[3])
         sdr_dev_id = sys.argv[4]
         bias_t_string = sys.argv[5]
-
+        
         ##################################################
         # Variables
         ##################################################
@@ -58,20 +59,6 @@ class rtlsdr_m2_lrpt_rx(gr.top_block):
         # Blocks
         ##################################################
 
-        self.soapy_airspyhf_source_0 = None
-        dev = 'driver=airspyhf'
-        stream_args = ''
-        tune_args = ['']
-        settings = ['']
-
-        self.soapy_airspyhf_source_0 = soapy.source(dev, "fc32", 1, '',
-                                  stream_args, tune_args, settings)
-        self.soapy_airspyhf_source_0.set_sample_rate(0, samp_rate_airspy)
-        self.soapy_airspyhf_source_0.set_gain_mode(0, True)
-        self.soapy_airspyhf_source_0.set_frequency(0, freq)
-        self.soapy_airspyhf_source_0.set_frequency_correction(0, freq_offset)
-        self.soapy_airspyhf_source_0.set_gain(0, 'RF', min(max(0, -48.0), 0.0))
-        self.soapy_airspyhf_source_0.set_gain(0, 'LNA', 6 if True else 0)
         self.root_raised_cosine_filter_0 = filter.fir_filter_ccf(
             1,
             firdes.root_raised_cosine(
@@ -85,6 +72,21 @@ class rtlsdr_m2_lrpt_rx(gr.top_block):
                 decimation=decim,
                 taps=[],
                 fractional_bw=0)
+        self.osmosdr_source_0 = osmosdr.source(
+            args="numchan=" + str(1) + " " + "airspy=0"
+        )
+        self.osmosdr_source_0.set_time_unknown_pps(osmosdr.time_spec_t())
+        self.osmosdr_source_0.set_sample_rate(samp_rate)
+        self.osmosdr_source_0.set_center_freq(freq, 0)
+        self.osmosdr_source_0.set_freq_corr(0, 0)
+        self.osmosdr_source_0.set_dc_offset_mode(0, 0)
+        self.osmosdr_source_0.set_iq_balance_mode(0, 0)
+        self.osmosdr_source_0.set_gain_mode(True, 0)
+        self.osmosdr_source_0.set_gain(gain, 0)
+        self.osmosdr_source_0.set_if_gain(20, 0)
+        self.osmosdr_source_0.set_bb_gain(20, 0)
+        self.osmosdr_source_0.set_antenna('', 0)
+        self.osmosdr_source_0.set_bandwidth(0, 0)
         self.digital_costas_loop_cc_0 = digital.costas_loop_cc(pll_alpha, 4, False)
         self.digital_constellation_soft_decoder_cf_1 = digital.constellation_soft_decoder_cf(digital.constellation_calcdist(([-1-1j, -1+1j, 1+1j, 1-1j]), ([0, 1, 3, 2]), 4, 1).base())
         self.digital_clock_recovery_mm_xx_0 = digital.clock_recovery_mm_cc(sps, (clock_alpha**2/4.0), 0.5, clock_alpha, 0.005)
@@ -105,9 +107,9 @@ class rtlsdr_m2_lrpt_rx(gr.top_block):
         self.connect((self.digital_clock_recovery_mm_xx_0, 0), (self.digital_constellation_soft_decoder_cf_1, 0))
         self.connect((self.digital_constellation_soft_decoder_cf_1, 0), (self.analog_rail_ff_0, 0))
         self.connect((self.digital_costas_loop_cc_0, 0), (self.digital_clock_recovery_mm_xx_0, 0))
+        self.connect((self.osmosdr_source_0, 0), (self.rational_resampler_xxx_0, 0))
         self.connect((self.rational_resampler_xxx_0, 0), (self.analog_agc_xx_0, 0))
         self.connect((self.root_raised_cosine_filter_0, 0), (self.digital_costas_loop_cc_0, 0))
-        self.connect((self.soapy_airspyhf_source_0, 0), (self.rational_resampler_xxx_0, 0))
 
 
     def get_samp_rate_airspy(self):
@@ -116,7 +118,6 @@ class rtlsdr_m2_lrpt_rx(gr.top_block):
     def set_samp_rate_airspy(self, samp_rate_airspy):
         self.samp_rate_airspy = samp_rate_airspy
         self.set_samp_rate(self.samp_rate_airspy/self.decim)
-        self.soapy_airspyhf_source_0.set_sample_rate(0, self.samp_rate_airspy)
 
     def get_decim(self):
         return self.decim
@@ -139,6 +140,7 @@ class rtlsdr_m2_lrpt_rx(gr.top_block):
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
         self.set_sps((self.samp_rate*1.0)/(self.symb_rate*1.0))
+        self.osmosdr_source_0.set_sample_rate(self.samp_rate)
         self.root_raised_cosine_filter_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, self.symb_rate, 0.6, 361))
 
     def get_sps(self):
@@ -160,7 +162,7 @@ class rtlsdr_m2_lrpt_rx(gr.top_block):
 
     def set_freq(self, freq):
         self.freq = freq
-        self.soapy_airspyhf_source_0.set_frequency(0, self.freq)
+        self.osmosdr_source_0.set_center_freq(self.freq, 0)
 
     def get_clock_alpha(self):
         return self.clock_alpha
