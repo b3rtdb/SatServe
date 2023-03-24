@@ -18,7 +18,8 @@ from gnuradio import gr
 from gnuradio.fft import window
 import sys
 import signal
-from argparse import ArgumentParser
+from gnuradio.eng_option import eng_option
+from optparse import OptionParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
 import osmosdr
@@ -30,7 +31,7 @@ import time
 class rtlsdr_noaa_apt_rx(gr.top_block):
 
     def __init__(self):
-        gr.top_block.__init__(self, "Airspy HF+ NOAA APT Receiver", catch_exceptions=True)
+        gr.top_block.__init__(self, "Airspy HF+ NOAA APT Receiver")
 
         ###############################################################
 	    # Variables - added for Raspberry-Noaa-V2 manually after export
