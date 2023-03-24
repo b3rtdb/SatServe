@@ -69,7 +69,7 @@ class rtlsdr_m2_lrpt_rx(gr.top_block):
                 taps=[],
                 fractional_bw=0)
         self.osmosdr_source_0 = osmosdr.source(
-            args="numchan=" + str(1) + " " + "airspy=0"
+            args="numchan=" + str(1) + " " + "airspyhf=0"
         )
         self.osmosdr_source_0.set_time_unknown_pps(osmosdr.time_spec_t())
         self.osmosdr_source_0.set_sample_rate(samp_rate)
